@@ -4,6 +4,8 @@ const userModel = require("../models/user.model");
 const messageModel = require("../models/message.model");
 const cookie = require("cookie");
 const aiService = require("../services/ai.service");
+const vectorService = require("../services/vector.service");
+const crypto = require("crypto");
 
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {});
@@ -40,34 +42,52 @@ const initSocketServer = (httpServer) => {
         }
 
         // Save user message
-        await messageModel.create({
-          chat: messagePayload.chat,
-          user: socket.user._id,
-          content: messagePayload.content,
-          role: "user",
+        // await messageModel.create({
+        //   chat: messagePayload.chat,
+        //   user: socket.user._id,
+        //   content: messagePayload.content,
+        //   role: "user",
+        // });
+
+        const vectors = await aiService.generateVector(messagePayload.content);
+
+        await vectorService.createMemory({
+          vectors,
+          messageId: crypto.randomUUID(),
+          metadata: {
+            chat: messagePayload.chat,
+            user: socket.user._id,
+            text: messagePayload.content,
+          },
         });
 
         // chat history
-        const chatHistory = (await messageModel.find({
-          chat: messagePayload.chat,
-        }).sort({createdAt: -1}).limit(4).lean()).reverse()
+        const chatHistory = (
+          await messageModel
+            .find({
+              chat: messagePayload.chat,
+            })
+            .sort({ createdAt: -1 })
+            .limit(4)
+            .lean()
+        ).reverse();
 
         const response = await aiService.generateResponse(
-          chatHistory.map((item)=>{
+          chatHistory.map((item) => {
             return {
               role: item.role,
-              parts: [{text: item.content}]
-            }
-          })
+              parts: [{ text: item.content }],
+            };
+          }),
         );
 
         // Save AI message
-        await messageModel.create({
-          chat: messagePayload.chat,
-          user: socket.user._id,
-          content: response,
-          role: "model",
-        });
+        // await messageModel.create({
+        //   chat: messagePayload.chat,
+        //   user: socket.user._id,
+        //   content: response,
+        //   role: "model",
+        // });
 
         //shows in frontend
         socket.emit("ai-response", {
