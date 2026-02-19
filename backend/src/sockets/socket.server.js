@@ -41,24 +41,16 @@ const initSocketServer = (httpServer) => {
         }
 
         // save user message in db
-        const message = await messageModel.create({
-          chat: messagePayload.chat,
-          user: socket.user._id,
-          content: messagePayload.content,
-          role: "user",
-        });
-
         // generate vector for user message
-        const vectors = await aiService.generateVector(messagePayload.content);
-
-        // query pinecone for related memory
-        const memory = await vectorService.queryMemory({
-          queryVector: vectors,
-          limit: 3,
-          metadata: { 
-            user: socket.user._id 
-          }
-        });
+        const [message, vectors] = await Promise.all([
+          messageModel.create({
+            chat: messagePayload.chat,
+            user: socket.user._id,
+            content: messagePayload.content,
+            role: "user",
+          }),
+          aiService.generateVector(messagePayload.content),
+        ]);
 
         // save user messsage in pinecone
         await vectorService.createMemory({
@@ -71,14 +63,23 @@ const initSocketServer = (httpServer) => {
           },
         });
 
+        // query pinecone for related memory
         // get chat history from db
-        const chatHistory = (
-          await messageModel
+        const [memory, chatHistory] = await Promise.all([
+          vectorService.queryMemory({
+            queryVector: vectors,
+            limit: 3,
+            metadata: {
+              user: socket.user._id,
+            },
+          }),
+          messageModel
             .find({ chat: messagePayload.chat })
             .sort({ createdAt: -1 })
             .limit(20)
             .lean()
-        ).reverse()
+            .then((messages) => messages.reverse()),
+        ]);
 
         // creating stm using chatHistory
         const stm = chatHistory.map((item) => {
@@ -86,7 +87,7 @@ const initSocketServer = (httpServer) => {
             role: item.role,
             parts: [{ text: item.content }],
           };
-        })
+        });
 
         // creating ltm using query memory in pinecone
         const ltm = [
@@ -104,21 +105,28 @@ const initSocketServer = (httpServer) => {
               },
             ],
           },
-        ]
+        ];
 
         // Generating AI response using ltm & stm
-        const response = await aiService.generateResponse([...ltm, ...stm])
+        const response = await aiService.generateResponse([...ltm, ...stm]);
+
+        //sending response in frontend
+        socket.emit("ai-response", {
+          content: response,
+          chat: messagePayload.chat,
+        });
 
         // save AI generated response in db
-        const responseMessage = await messageModel.create({
-          chat: messagePayload.chat,
-          user: socket.user._id,
-          content: response,
-          role: "model"
-        })
-
         // generate vector for AI response
-        const responseVectors = await aiService.generateVector(response)
+        const [responseMessage, responseVectors] = await Promise.all([
+          messageModel.create({
+            chat: messagePayload.chat,
+            user: socket.user._id,
+            content: response,
+            role: "model",
+          }),
+          aiService.generateVector(response),
+        ]);
 
         // save AI response in pinecone
         await vectorService.createMemory({
@@ -127,16 +135,10 @@ const initSocketServer = (httpServer) => {
           metadata: {
             chat: messagePayload.chat,
             user: socket.user._id,
-            text: response
-          }
+            text: response,
+          },
         });
-
-        //shows in frontend
-        socket.emit("ai-response", {
-          content: response,
-          chat: messagePayload.chat
-        })
-
+        
       } catch (err) {
         console.error("AI error:", err);
         socket.emit("error", { message: "Something went wrong" });
