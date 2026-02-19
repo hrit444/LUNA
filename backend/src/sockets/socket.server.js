@@ -36,24 +36,34 @@ const initSocketServer = (httpServer) => {
   io.on("connection", (socket) => {
     socket.on("ai-message", async (messagePayload) => {
       try {
-        // if we get the payload
         if (!messagePayload?.content || !messagePayload?.chat) {
           return socket.emit("error", { message: "Invalid payload" });
         }
 
-        // Save user message
-        // await messageModel.create({
-        //   chat: messagePayload.chat,
-        //   user: socket.user._id,
-        //   content: messagePayload.content,
-        //   role: "user",
-        // });
+        // save user message in db
+        const message = await messageModel.create({
+          chat: messagePayload.chat,
+          user: socket.user._id,
+          content: messagePayload.content,
+          role: "user",
+        });
 
+        // generate vector for user message
         const vectors = await aiService.generateVector(messagePayload.content);
 
+        // query pinecone for related memory
+        const memory = await vectorService.queryMemory({
+          queryVector: vectors,
+          limit: 3,
+          metadata: { 
+            user: socket.user._id 
+          }
+        });
+
+        // save user messsage in pinecone
         await vectorService.createMemory({
-          vectors,
-          messageId: crypto.randomUUID(),
+          vectors: vectors,
+          messageId: message._id,
           metadata: {
             chat: messagePayload.chat,
             user: socket.user._id,
@@ -61,39 +71,72 @@ const initSocketServer = (httpServer) => {
           },
         });
 
-        // chat history
+        // get chat history from db
         const chatHistory = (
           await messageModel
-            .find({
-              chat: messagePayload.chat,
-            })
+            .find({ chat: messagePayload.chat })
             .sort({ createdAt: -1 })
-            .limit(4)
+            .limit(20)
             .lean()
-        ).reverse();
+        ).reverse()
 
-        const response = await aiService.generateResponse(
-          chatHistory.map((item) => {
-            return {
-              role: item.role,
-              parts: [{ text: item.content }],
-            };
-          }),
-        );
+        // creating stm using chatHistory
+        const stm = chatHistory.map((item) => {
+          return {
+            role: item.role,
+            parts: [{ text: item.content }],
+          };
+        })
 
-        // Save AI message
-        // await messageModel.create({
-        //   chat: messagePayload.chat,
-        //   user: socket.user._id,
-        //   content: response,
-        //   role: "model",
-        // });
+        // creating ltm using query memory in pinecone
+        const ltm = [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `
+            
+            these are some previous messages from the chat, use them to generate response
+
+            ${memory.map((item) => item.metadata.text).join("\n")}
+            
+            `,
+              },
+            ],
+          },
+        ]
+
+        // Generating AI response using ltm & stm
+        const response = await aiService.generateResponse([...ltm, ...stm])
+
+        // save AI generated response in db
+        const responseMessage = await messageModel.create({
+          chat: messagePayload.chat,
+          user: socket.user._id,
+          content: response,
+          role: "model"
+        })
+
+        // generate vector for AI response
+        const responseVectors = await aiService.generateVector(response)
+
+        // save AI response in pinecone
+        await vectorService.createMemory({
+          vectors: responseVectors,
+          messageId: responseMessage._id,
+          metadata: {
+            chat: messagePayload.chat,
+            user: socket.user._id,
+            text: response
+          }
+        });
 
         //shows in frontend
         socket.emit("ai-response", {
           content: response,
-          chat: messagePayload.chat,
-        });
+          chat: messagePayload.chat
+        })
+
       } catch (err) {
         console.error("AI error:", err);
         socket.emit("error", { message: "Something went wrong" });
