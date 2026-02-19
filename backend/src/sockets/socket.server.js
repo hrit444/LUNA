@@ -1,8 +1,9 @@
 const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
-const cookie = require("cookie")
-const aiService = require("../services/ai.service")
+const messageModel = require("../models/message.model");
+const cookie = require("cookie");
+const aiService = require("../services/ai.service");
 
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {});
@@ -31,27 +32,53 @@ const initSocketServer = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-
     socket.on("ai-message", async (messagePayload) => {
-
       try {
-        const response = await aiService.generateResponse(messagePayload.message);
+        // if we get the payload
+        if (!messagePayload?.content || !messagePayload?.chat) {
+          return socket.emit("error", { message: "Invalid payload" });
+        }
 
-        socket.emit("ai-response", {
-          content: response,
-          chat: messagePayload.chat
+        // Save user message
+        await messageModel.create({
+          chat: messagePayload.chat,
+          user: socket.user._id,
+          content: messagePayload.content,
+          role: "user",
         });
 
-      } catch (error) {
-        console.error("AI Error:", error.message);
+        // chat history
+        const chatHistory = (await messageModel.find({
+          chat: messagePayload.chat,
+        }).sort({createdAt: -1}).limit(4).lean()).reverse()
 
+        const response = await aiService.generateResponse(
+          chatHistory.map((item)=>{
+            return {
+              role: item.role,
+              parts: [{text: item.content}]
+            }
+          })
+        );
+
+        // Save AI message
+        await messageModel.create({
+          chat: messagePayload.chat,
+          user: socket.user._id,
+          content: response,
+          role: "model",
+        });
+
+        //shows in frontend
         socket.emit("ai-response", {
-          content: "AI failed to respond.",
-          chat: messagePayload.chat
-        })
+          content: response,
+          chat: messagePayload.chat,
+        });
+      } catch (err) {
+        console.error("AI error:", err);
+        socket.emit("error", { message: "Something went wrong" });
       }
-      
-    })
+    });
   });
 };
 

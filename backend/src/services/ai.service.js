@@ -4,16 +4,11 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const generateResponse = async (message) => {
+const generateResponse = async (content) => {
 
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: message }]
-      }
-    ]
+    contents: content
   });
 
   return response.candidates[0].content.parts[0].text;
