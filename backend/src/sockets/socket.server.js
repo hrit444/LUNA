@@ -5,10 +5,15 @@ const messageModel = require("../models/message.model");
 const cookie = require("cookie");
 const aiService = require("../services/ai.service");
 const vectorService = require("../services/vector.service");
-const crypto = require("crypto");
 
 const initSocketServer = (httpServer) => {
-  const io = new Server(httpServer, {});
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "http://localhost:5173",
+      allowedHeaders: ["Content-Type", "Authorization"],
+      credentials: true,
+    },
+  });
 
   //middleware like stuff
   io.use(async (socket, next) => {
@@ -138,7 +143,6 @@ const initSocketServer = (httpServer) => {
             text: response,
           },
         });
-        
       } catch (err) {
         console.error("AI error:", err);
         socket.emit("error", { message: "Something went wrong" });
