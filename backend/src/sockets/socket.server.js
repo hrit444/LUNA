@@ -39,6 +39,8 @@ const initSocketServer = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
+    console.log("User connected");
+    
     socket.on("ai-message", async (messagePayload) => {
       try {
         if (!messagePayload?.content || !messagePayload?.chat) {

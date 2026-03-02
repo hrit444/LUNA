@@ -20,7 +20,7 @@ const Chat = () => {
     if (!token) return
     axios
       .get('http://localhost:3000/api/chat', {
-        headers:        { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       })
       .then(res => dispatch(setConversations(res.data?.chats || res.data || [])))

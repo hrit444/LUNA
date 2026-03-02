@@ -3,15 +3,11 @@ import { useSelector } from 'react-redux'
 import { selectUser } from '../../redux/slice/authSlice'
 import './Chat.css'
 
-const initials = (name = '') =>
-  name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-
 const formatTime = (iso) => {
   if (!iso) return ''
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
-/* Double-tick SVG */
 const TickIcon = () => (
   <svg
     width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -23,27 +19,38 @@ const TickIcon = () => (
 )
 
 const ChatMessage = ({ message }) => {
-  const user  = useSelector(selectUser)
-  const isMine = message.senderId === user?._id
+  const user = useSelector(selectUser)
 
-  const senderName = isMine
-    ? `${user?.fullname?.firstname || ''} ${user?.fullname?.lastname || ''}`
-    : `${message.senderName || 'User'}`
+  // role: "user" = sent by human, role: "model" = Luna AI response
+  // Optimistic messages (opt-*) also have role: "user"
+  const isModel = message.role === 'model'
+  const isMine  = !isModel  // user role or optimistic
 
   return (
     <div className={`chat-bubble-row chat-bubble-row--${isMine ? 'mine' : 'theirs'}`}>
-      {/* Avatar — only for other person */}
-      {!isMine && (
-        <div className="chat-bubble-row__avatar">
-          {initials(senderName)}
+
+      {/* AI avatar — only shown for model messages */}
+      {isModel && (
+        <div className="chat-bubble-row__avatar chat-bubble-row__avatar--ai">
+          AI
         </div>
       )}
 
       <div className={`chat-bubble chat-bubble--${isMine ? 'mine' : 'theirs'}`}>
+        {/* AI label on model messages */}
+        {isModel && (
+          <span className="chat-bubble__sender">Luna AI</span>
+        )}
+
         {message.content}
+
         <span className="chat-bubble__time">
           {formatTime(message.createdAt)}
-          {isMine && <span className="chat-bubble__tick"><TickIcon /></span>}
+          {isMine && (
+            <span className="chat-bubble__tick">
+              <TickIcon />
+            </span>
+          )}
         </span>
       </div>
     </div>

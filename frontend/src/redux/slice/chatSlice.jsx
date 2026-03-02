@@ -9,10 +9,8 @@ export const fetchConversations = createAsyncThunk(
     try {
       const res = await axios.get(
         'http://localhost:3000/api/chat',
-        // {user: user?._id,},
         { withCredentials: true }
       )
-
       return res.data.chats
     } catch (err) {
       return rejectWithValue(
@@ -25,14 +23,14 @@ export const fetchConversations = createAsyncThunk(
 /* ------------------ Initial State ------------------ */
 
 const initialState = {
-  conversations: [],
+  conversations:      [],
   activeConversation: null,
-  messages: [],
-  onlineUsers: [],
-  isTyping: false,
-  unreadCounts: {},
-  loading: false,
-  error: null,
+  messages:           [],
+  onlineUsers:        [],
+  isTyping:           false,
+  unreadCounts:       {},
+  loading:            false,
+  error:              null,
 }
 
 /* ------------------ Slice ------------------ */
@@ -41,6 +39,7 @@ const chatSlice = createSlice({
   name: 'chat',
   initialState,
   reducers: {
+
     setConversations: (state, { payload }) => {
       state.conversations = payload
     },
@@ -48,23 +47,21 @@ const chatSlice = createSlice({
     resetChatState: () => initialState,
 
     upsertConversation: (state, { payload }) => {
-      const idx = state.conversations.findIndex(
-        c => c._id === payload._id
-      )
-
+      const idx = state.conversations.findIndex(c => c._id === payload._id)
       if (idx >= 0) state.conversations[idx] = payload
-      else state.conversations.unshift(payload)
+      else          state.conversations.unshift(payload)
     },
 
     setActiveConversation: (state, { payload }) => {
       state.activeConversation = payload
-      state.messages = []
+      state.messages           = []
+      state.isTyping           = false
       if (payload?._id) delete state.unreadCounts[payload._id]
     },
 
     clearActiveConversation: (state) => {
       state.activeConversation = null
-      state.messages = []
+      state.messages           = []
     },
 
     setMessages: (state, { payload }) => {
@@ -74,14 +71,12 @@ const chatSlice = createSlice({
     appendMessage: (state, { payload }) => {
       state.messages.push(payload)
 
-      const idx = state.conversations.findIndex(
-        c => c._id === payload.conversationId
-      )
+      const chatId = payload.chat || payload.conversationId
+      const idx    = state.conversations.findIndex(c => c._id === chatId)
 
       if (idx >= 0) {
-        state.conversations[idx].lastMessage = payload
-        state.conversations[idx].updatedAt = payload.createdAt
-
+        state.conversations[idx].lastActivity = payload.createdAt
+        state.conversations[idx].lastMessage  = payload
         const [convo] = state.conversations.splice(idx, 1)
         state.conversations.unshift(convo)
       }
@@ -96,8 +91,7 @@ const chatSlice = createSlice({
     },
 
     incrementUnread: (state, { payload }) => {
-      state.unreadCounts[payload] =
-        (state.unreadCounts[payload] || 0) + 1
+      state.unreadCounts[payload] = (state.unreadCounts[payload] || 0) + 1
     },
   },
 
@@ -105,15 +99,15 @@ const chatSlice = createSlice({
     builder
       .addCase(fetchConversations.pending, (state) => {
         state.loading = true
-        state.error = null
+        state.error   = null
       })
       .addCase(fetchConversations.fulfilled, (state, action) => {
-        state.loading = false
+        state.loading       = false
         state.conversations = action.payload
       })
       .addCase(fetchConversations.rejected, (state, action) => {
         state.loading = false
-        state.error = action.payload
+        state.error   = action.payload
       })
   },
 })
@@ -135,10 +129,10 @@ export default chatSlice.reducer
 
 /* ------------------ Selectors ------------------ */
 
-export const selectConversations = (s) => s.chat.conversations
+export const selectConversations      = (s) => s.chat.conversations
 export const selectActiveConversation = (s) => s.chat.activeConversation
-export const selectMessages = (s) => s.chat.messages
-export const selectOnlineUsers = (s) => s.chat.onlineUsers
-export const selectIsTyping = (s) => s.chat.isTyping
-export const selectUnreadCounts = (s) => s.chat.unreadCounts
-export const selectChatLoading = (s) => s.chat.loading
+export const selectMessages           = (s) => s.chat.messages
+export const selectOnlineUsers        = (s) => s.chat.onlineUsers
+export const selectIsTyping           = (s) => s.chat.isTyping
+export const selectUnreadCounts       = (s) => s.chat.unreadCounts
+export const selectChatLoading        = (s) => s.chat.loading
