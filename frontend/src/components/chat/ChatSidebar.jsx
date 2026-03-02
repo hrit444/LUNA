@@ -43,12 +43,10 @@ const ChatItem = React.memo(({ chat, isActive }) => {
       className={`chat-convo-item ${isActive ? 'active' : ''}`}
       onClick={() => dispatch(setActiveConversation(chat))}
     >
-      {/* Avatar */}
       <div className="chat-convo-item__avatar">
         {chat.title?.[0]?.toUpperCase() || 'C'}
       </div>
 
-      {/* Info */}
       <div className="chat-convo-item__info">
         <div className="chat-convo-item__name">
           {chat.title}
@@ -58,7 +56,6 @@ const ChatItem = React.memo(({ chat, isActive }) => {
         </div>
       </div>
 
-      {/* Time */}
       <div className="chat-convo-item__meta">
         <span className="chat-convo-item__time">
           {formatTime(chat.lastActivity)}
@@ -79,29 +76,54 @@ const ChatSidebar = ({ mobileOpen }) => {
 
   const [search, setSearch] = useState('')
   const [showNewChat, setShowNewChat] = useState(false)
+  const [hasFetched, setHasFetched] = useState(false)
 
-  /* ================= Fetch Chats On Login ================= */
+  /* ================= Fetch Chats ================= */
 
   useEffect(() => {
     if (user?._id) {
-      dispatch(fetchConversations())
+      dispatch(fetchConversations()).finally(() => {
+        setHasFetched(true)
+      })
     }
   }, [dispatch, user?._id])
+
+  /* ================= Auto Logic ================= */
+
+  useEffect(() => {
+    if (!user?._id || !hasFetched) return
+
+    // If chats exist → open latest
+    if (chats?.length > 0 && !activeChat) {
+      const sortedChats = [...chats].sort(
+        (a, b) => new Date(b.lastActivity) - new Date(a.lastActivity)
+      )
+
+      dispatch(setActiveConversation(sortedChats[0]))
+      return
+    }
+
+    // If no chats exist → show create modal
+    if (chats?.length === 0 && !activeChat) {
+      setShowNewChat(true)
+    }
+
+  }, [chats, activeChat, hasFetched, dispatch, user?._id])
 
   /* ================= Filter + Sort ================= */
 
   const filteredChats = useMemo(() => {
     return chats
-      .filter((chat) =>
+      ?.filter((chat) =>
         chat.title
           ?.toLowerCase()
           .includes(search.toLowerCase())
       )
-      .sort(
+      ?.sort(
         (a, b) =>
           new Date(b.lastActivity) -
           new Date(a.lastActivity)
-      )
+      ) || []
   }, [chats, search])
 
   /* ================= Logout ================= */
@@ -111,7 +133,7 @@ const ChatSidebar = ({ mobileOpen }) => {
     dispatch(resetChatState())
   }
 
-  /* ================= Safety Guard ================= */
+  /* ================= Safety ================= */
 
   if (!user) return null
 

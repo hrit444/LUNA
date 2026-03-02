@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import axios from 'axios'
 import {
   upsertConversation,
@@ -54,7 +54,7 @@ const NewChatModal = ({ onClose }) => {
 
     try {
       const res = await axios.post(
-        'https://luna-8gpi.onrender.com/api/chat',
+        'http://localhost:3000/api/chat',
         { title: trimmed },
         { withCredentials: true }
       )

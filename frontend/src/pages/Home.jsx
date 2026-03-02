@@ -3,7 +3,6 @@ import Background  from '../components/others/Background'
 import Navbar      from '../components/navbar/Navbar'
 import Footer      from '../components/others/Footer'
 import Hero        from '../components/home/Hero'
-import StatsBar    from '../components/home/StatsBar'
 import Features    from '../components/home/Features'
 import ChatPreview from '../components/home/ChatPreview'
 import CTA         from '../components/home/CTA'
@@ -16,7 +15,6 @@ const Home = () => (
     <Navbar />
     <main>
       <Hero />
-      <StatsBar />
       <Features />
       <ChatPreview />
       <CTA />

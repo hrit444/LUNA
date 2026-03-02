@@ -32,7 +32,7 @@ const ChatMessage = ({ message }) => {
       {/* AI avatar — only shown for model messages */}
       {isModel && (
         <div className="chat-bubble-row__avatar chat-bubble-row__avatar--ai">
-          AI
+          LU
         </div>
       )}
 

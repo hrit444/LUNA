@@ -31,7 +31,7 @@ const LoginForm = () => {
 
     axios
       .post(
-        'https://luna-8gpi.onrender.com/api/auth/login',
+        'http://localhost:3000/api/auth/login',
         { email: data.email, password: data.password },
         { withCredentials: true }
       )

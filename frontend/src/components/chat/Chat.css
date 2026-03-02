@@ -289,10 +289,10 @@
     rgba(140,255,180,0.9) 0%,
     rgba(0,200,60,0.7)   40%,
     rgba(0,60,20,0.4)    100%);
-  color: #001a08;
+  color: rgb(253, 255, 252);;
   box-shadow: 0 0 18px rgba(0,255,80,0.35);
   border-color: rgba(0,255,80,0.45);
-  font-size: 0.75rem;
+  font-size: 0.55rem;
 }
 
 .chat-main__online-dot {
@@ -375,7 +375,7 @@
   font-family: var(--font-display);
   font-size: 0.6rem;
   font-weight: 700;
-  color: var(--green);
+  color:  var(--green);
   flex-shrink: 0;
   align-self: flex-end;
 }
@@ -385,7 +385,7 @@
     rgba(140,255,180,0.9) 0%,
     rgba(0,200,60,0.7)   40%,
     rgba(0,60,20,0.4)    100%);
-  color: #001a08;
+  color: rgb(253, 255, 252);  
   box-shadow: 0 0 10px rgba(0,255,80,0.35);
   border-color: rgba(0,255,80,0.35);
 }
@@ -424,9 +424,9 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: .8rem;
   font-weight: 900;
-  color: #001a08;
+  color: rgb(245, 254, 243);
   animation: float 4s ease-in-out infinite;
 }
 

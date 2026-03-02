@@ -49,7 +49,7 @@ const TypingIndicator = () => (
       className="chat-bubble-row__avatar chat-bubble-row__avatar--ai"
       style={{ width: 28, height: 28, flexShrink: 0 }}
     >
-      AI
+      LU
     </div>
     <div className="chat-typing-dots">
       <div className="chat-typing-dot" />
@@ -122,7 +122,7 @@ const ChatPanel = ({ onMenuClick }) => {
   dispatch(setMessages([]))
 
   axios
-    .get(`https://luna-8gpi.onrender.com/api/chat/messages/${activeConvo._id}`, {
+    .get(`http://localhost:3000/api/chat/messages/${activeConvo._id}`, {
       withCredentials: true,
     })
     .then(res => {
@@ -149,7 +149,7 @@ const ChatPanel = ({ onMenuClick }) => {
 
   /* ── socket: connect once ── */
   useEffect(() => {
-    const newSocket = io('https://luna-8gpi.onrender.com', { withCredentials: true })
+    const newSocket = io('http://localhost:3000', { withCredentials: true })
     setSocket(newSocket)
     return () => newSocket.disconnect()
   }, [])
@@ -236,10 +236,11 @@ const ChatPanel = ({ onMenuClick }) => {
       {/* ── Header ── */}
       <div className="chat-main__header">
         <button
+        className='flex lg:hidden xl:hidden 2xl:hidden'
           onClick={onMenuClick}
           style={{
             background: 'none', border: 'none', color: 'rgba(0,255,80,0.5)',
-            cursor: 'pointer', display: 'flex', padding: 4, marginRight: 4,
+            cursor: 'pointer', padding: 4, marginRight: 4,
           }}
         >
           <MenuIcon />
@@ -247,7 +248,7 @@ const ChatPanel = ({ onMenuClick }) => {
 
         <div className="chat-main__avatar chat-main__avatar--ai">
           <div className="chat-main__online-dot" />
-          AI
+          LUNA
         </div>
 
         <div className="chat-main__contact-info">
@@ -262,7 +263,7 @@ const ChatPanel = ({ onMenuClick }) => {
       <div className="chat-messages">
         {messages.length === 0 && !isTyping && (
           <div className="chat-welcome">
-            <div className="chat-welcome__orb">AI</div>
+            <div className="chat-welcome__orb">LUNA</div>
             <p className="chat-welcome__title">{chatTitle}</p>
             <p className="chat-welcome__sub">
               Hi {user?.fullname?.firstname || 'there'}! I'm Luna. Ask me anything.
