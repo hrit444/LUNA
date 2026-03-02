@@ -1,15 +1,28 @@
 import React from 'react'
+import Background  from '../components/others/Background'
+import Navbar      from '../components/navbar/Navbar'
+import Footer      from '../components/others/Footer'
+import Hero        from '../components/home/Hero'
+import StatsBar    from '../components/home/StatsBar'
+import Features    from '../components/home/Features'
+import ChatPreview from '../components/home/ChatPreview'
+import CTA         from '../components/home/CTA'
+import '../components/others/ui.css'
+import './Home.css'
 
-const Home = () => {
-  // TODO: Replace with actual user data from API
-
-  return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      
-      <h1 className="text-3xl font-bold text-center mt-8">Welcome to Luna Chat</h1>
-      
-    </div>
-  )
-}
+const Home = () => (
+  <div className="luna-page home-page">
+    <Background />
+    <Navbar />
+    <main>
+      <Hero />
+      <StatsBar />
+      <Features />
+      <ChatPreview />
+      <CTA />
+    </main>
+    <Footer />
+  </div>
+)
 
 export default Home

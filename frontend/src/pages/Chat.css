@@ -1,0 +1,19 @@
+.chat-page-root {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+}
+
+/* Mobile overlay when sidebar is open */
+.chat-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 40;
+}
+
+@media (max-width: 768px) {
+  .chat-sidebar-overlay.visible { display: block; }
+}

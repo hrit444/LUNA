@@ -1,0 +1,77 @@
+.cta-section {
+  position: relative;
+  z-index: 10;
+  padding: 0 24px 100px;
+  display: flex;
+  justify-content: center;
+}
+
+.cta-card {
+  background: var(--card-bg);
+  border: 1px solid rgba(0,255,80,0.18);
+  border-radius: 20px;
+  padding: 60px 48px;
+  text-align: center;
+  max-width: 700px;
+  width: 100%;
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 0 0 1px rgba(0,255,80,0.06),
+    0 0 60px rgba(0,255,80,0.06),
+    0 24px 80px rgba(0,0,0,0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,80,0.5), transparent);
+}
+
+.cta-card__glow {
+  position: absolute;
+  bottom: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,255,80,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-card__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+.cta-card__title .accent { color: var(--green); text-shadow: 0 0 24px rgba(0,255,80,0.45); }
+
+.cta-card__sub {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: rgba(160,200,170,0.55);
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+.cta-card__actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.cta-card__note {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: rgba(0,255,80,0.28);
+  margin-top: 20px;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 600px) { .cta-card { padding: 40px 24px; } }

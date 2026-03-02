@@ -1,0 +1,145 @@
+.hero {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 130px 24px 80px;
+}
+
+/* ── Badge ── */
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 18px;
+  background: rgba(0,255,80,0.06);
+  border: 1px solid rgba(0,255,80,0.2);
+  border-radius: 100px;
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 30px;
+  animation: fade-up 0.55s ease both;
+}
+
+.hero-badge__dot {
+  width: 6px; height: 6px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* ── Title ── */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 8vw, 5.8rem);
+  font-weight: 900;
+  line-height: 1.06;
+  color: #fff;
+  letter-spacing: 0.02em;
+  margin-bottom: 24px;
+  animation: fade-up 0.55s 0.1s ease both;
+}
+.hero-title .accent { color: var(--green); text-shadow: 0 0 40px rgba(0,255,80,0.5), 0 0 80px rgba(0,255,80,0.2); }
+.hero-title .muted  { color: rgba(255,255,255,0.3); }
+
+/* ── Subtitle ── */
+.hero-sub {
+  font-family: var(--font-body);
+  font-size: 1.12rem;
+  color: rgba(175,215,185,0.65);
+  max-width: 570px;
+  line-height: 1.72;
+  font-weight: 400;
+  margin-bottom: 44px;
+  animation: fade-up 0.55s 0.2s ease both;
+}
+
+/* ── Action buttons ── */
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fade-up 0.55s 0.3s ease both;
+}
+
+/* ── Animated Orb ── */
+.hero-orb-wrap {
+  position: relative;
+  width: 260px; height: 260px;
+  margin: 64px auto 0;
+  animation: fade-up 0.6s 0.4s ease both;
+}
+
+.orb-ring {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,80,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: spin-slow 22s linear infinite;
+}
+.orb-ring::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 65%, rgba(0,255,80,0.45) 100%);
+  animation: spin-slow 5s linear infinite;
+}
+
+.orb-ring-mid {
+  width: 72%; height: 72%;
+  border-radius: 50%;
+  border: 1px solid rgba(0,255,80,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin-slow 13s linear infinite reverse;
+}
+
+.orb-core {
+  width: 56%; height: 56%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%,
+    rgba(140,255,180,0.95) 0%,
+    rgba(0,255,80, 0.7)   35%,
+    rgba(0,160,45, 0.5)   65%,
+    rgba(0, 50,18, 0.3)  100%);
+  box-shadow:
+    0 0  40px rgba(0,255,80,0.6),
+    0 0  80px rgba(0,255,80,0.28),
+    0 0 120px rgba(0,255,80,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #002010;
+  animation: float 4.5s ease-in-out infinite;
+}
+
+.orb-dot {
+  position: absolute;
+  width: 7px; height: 7px;
+  background: var(--green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0,255,80,0.9);
+}
+.orb-dot--top    { top: 0;    left: 50%; transform: translate(-50%,-50%); }
+.orb-dot--bottom { bottom: 0; left: 50%; transform: translate(-50%, 50%); }
+.orb-dot--left   { left: 0;   top:  50%; transform: translate(-50%,-50%); }
+
+@media (max-width: 600px) {
+  .hero-orb-wrap { width: 200px; height: 200px; }
+}
