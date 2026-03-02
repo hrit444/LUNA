@@ -26,7 +26,7 @@ const RegisterForm = () => {
     setApiError('')
 
     axios
-      .post('http://localhost:3000/api/auth/register',
+      .post('https://luna-8gpi.onrender.com/api/auth/register',
         {
           email:    data.email,
           password: data.password,
