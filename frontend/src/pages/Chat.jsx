@@ -19,7 +19,7 @@ const Chat = () => {
   useEffect(() => {
     if (!token) return
     axios
-      .get('http://localhost:3000/api/chat', {
+      .get('https://luna-8gpi.onrender.com/api/chat', {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       })

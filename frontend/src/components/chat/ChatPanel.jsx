@@ -122,7 +122,7 @@ const ChatPanel = ({ onMenuClick }) => {
   dispatch(setMessages([]))
 
   axios
-    .get(`http://localhost:3000/api/chat/messages/${activeConvo._id}`, {
+    .get(`https://luna-8gpi.onrender.com/api/chat/messages/${activeConvo._id}`, {
       withCredentials: true,
     })
     .then(res => {
@@ -149,7 +149,7 @@ const ChatPanel = ({ onMenuClick }) => {
 
   /* ── socket: connect once ── */
   useEffect(() => {
-    const newSocket = io('http://localhost:3000', { withCredentials: true })
+    const newSocket = io('https://luna-8gpi.onrender.com', { withCredentials: true })
     setSocket(newSocket)
     return () => newSocket.disconnect()
   }, [])
