@@ -28,12 +28,13 @@ const registerController = async (req, res) => {
     password: hashPassword,
   });
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-  res.cookie("token", token);
+  res.cookie("token", token, { httpOnly: true, secure: false, sameSite: 'lax' });
 
   res.status(201).json({
     message: "User registered sucessfully!",
+    token,
     user: {
       _id: user._id,
       fullname: user.fullname,
@@ -61,12 +62,13 @@ const loginController = async (req,res)=> {
     })
   }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-  res.cookie("token", token);
+  res.cookie("token", token, { httpOnly: true, secure: false, sameSite: 'lax' });
 
   res.status(200).json({
     message: "User logged in sucessfully!",
+    token,
     user: {
       _id: user._id,
       fullname: user.fullname,
@@ -75,4 +77,24 @@ const loginController = async (req,res)=> {
   });
 }
 
-module.exports = { registerController, loginController };
+const getMeController = async (req, res) => {
+  try {
+    // req.user is set by authUser middleware
+    res.status(200).json({
+      user: {
+        _id: req.user._id,
+        fullname: req.user.fullname,
+        email: req.user.email,
+      },
+    });
+  } catch (error) {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+}
+
+const logoutController = async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
+}
+
+module.exports = { registerController, loginController, getMeController, logoutController };

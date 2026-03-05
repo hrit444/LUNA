@@ -117,41 +117,68 @@ const ChatPanel = ({ onMenuClick }) => {
 
   /* ── always fetch messages from DB when conversation changes ── */
   useEffect(() => {
-  if (!activeConvo?._id) return
+    if (!activeConvo?._id) {
+      console.log('No active conversation selected')
+      return
+    }
 
-  dispatch(setMessages([]))
+    console.log('Fetching messages for chat ID:', activeConvo._id)
+    dispatch(setMessages([]))
 
-  axios
-    .get(`https://luna-8gpi.onrender.com/api/chat/messages/${activeConvo._id}`, {
-      withCredentials: true,
-    })
-    .then(res => {
-      console.log("API RESPONSE:", res.data)
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(
+          `https://luna-8gpi.onrender.com/api/chat/messages/${activeConvo._id}`,
+          { withCredentials: true }
+        )
 
-      let msgs = []
+        console.log('✅ API Response:', res.data)
 
-      if (Array.isArray(res?.data)) {
-        msgs = res.data
-      } else if (Array.isArray(res.data?.messages)) {
-        msgs = res.data.messages
+        let msgs = []
+
+        if (Array.isArray(res?.data)) {
+          msgs = res.data
+        } else if (Array.isArray(res.data?.messages)) {
+          msgs = res.data.messages
+        }
+
+        console.log(`📨 Loaded ${msgs.length} messages`)
+
+        const reversedMsgs = [...msgs].reverse()
+
+        dispatch(setMessages(reversedMsgs))
+      } catch (err) {
+        console.error('❌ Failed to fetch messages:', {
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          message: err.response?.data?.message || err.message,
+          chatId: activeConvo._id,
+          url: `https://luna-8gpi.onrender.com/api/chat/messages/${activeConvo._id}`
+        })
+        dispatch(setMessages([]))
       }
+    }
 
-      const reversedMsgs = [...msgs].reverse()
-
-      dispatch(setMessages(reversedMsgs))
-    })
-    .catch(err => {
-      console.error(err)
-      dispatch(setMessages([]))
-    })
-
-}, [activeConvo?._id, dispatch])
+    fetchMessages()
+  }, [activeConvo?._id, dispatch])
 
   /* ── socket: connect once ── */
   useEffect(() => {
     const newSocket = io('https://luna-8gpi.onrender.com', { withCredentials: true })
     setSocket(newSocket)
-    return () => newSocket.disconnect()
+    
+    newSocket.on('connect', () => {
+      console.log('✅ Socket connected:', newSocket.id)
+    })
+
+    newSocket.on('connect_error', (err) => {
+      console.error('❌ Socket connection error:', err)
+    })
+
+    return () => {
+      console.log('🔌 Disconnecting socket')
+      newSocket.disconnect()
+    }
   }, [])
 
   /* ── socket: receive AI response ── */
@@ -159,6 +186,7 @@ const ChatPanel = ({ onMenuClick }) => {
     if (!socket) return
 
     socket.on('ai-response', (data) => {
+      console.log('🤖 Received AI response:', data)
       dispatch(setTyping(false))
       dispatch(appendMessage({
         _id:       `ai-${Date.now()}`,
@@ -169,7 +197,7 @@ const ChatPanel = ({ onMenuClick }) => {
       }))
     })
 
-    socket.on('error', (err) => console.error('Socket error:', err))
+    socket.on('error', (err) => console.error('❌ Socket error:', err))
 
     return () => {
       socket.off('ai-response')
@@ -190,34 +218,37 @@ const ChatPanel = ({ onMenuClick }) => {
 
   /* ── send message ── */
   const handleSend = useCallback(async () => {
-  const content = text.trim()
-  if (!content || !activeConvo?._id || sending) return
+    const content = text.trim()
+    if (!content || !activeConvo?._id || sending) return
 
-  dispatch(appendMessage({
-    _id: `opt-${Date.now()}`,
-    chat: activeConvo._id,
-    content,
-    role: 'user',
-    createdAt: new Date().toISOString(),
-  }))
+    console.log('📤 Sending message:', { content, chatId: activeConvo._id })
 
-  setText('')
-  if (textareaRef.current) textareaRef.current.style.height = 'auto'
-  setSending(true)
-  dispatch(setTyping(true))
-
-  try {
-    socket?.emit('ai-message', {
-      content,
+    dispatch(appendMessage({
+      _id: `opt-${Date.now()}`,
       chat: activeConvo._id,
-    })
-  } catch (err) {
-    console.error('Send failed:', err)
-    dispatch(setTyping(false))
-  } finally {
-    setSending(false)
-  }
-}, [text, activeConvo, sending, dispatch, socket])
+      content,
+      role: 'user',
+      createdAt: new Date().toISOString(),
+    }))
+
+    setText('')
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    setSending(true)
+    dispatch(setTyping(true))
+
+    try {
+      socket?.emit('ai-message', {
+        content,
+        chat: activeConvo._id,
+      })
+      console.log('✅ Message emitted to socket')
+    } catch (err) {
+      console.error('❌ Send failed:', err)
+      dispatch(setTyping(false))
+    } finally {
+      setSending(false)
+    }
+  }, [text, activeConvo, sending, dispatch, socket])
 
   const chatTitle = activeConvo?.title || 'Luna AI'
   const grouped   = groupByDate(messages)
@@ -236,7 +267,7 @@ const ChatPanel = ({ onMenuClick }) => {
       {/* ── Header ── */}
       <div className="chat-main__header">
         <button
-        className='flex lg:hidden xl:hidden 2xl:hidden'
+          className='flex lg:hidden xl:hidden 2xl:hidden'
           onClick={onMenuClick}
           style={{
             background: 'none', border: 'none', color: 'rgba(0,255,80,0.5)',

@@ -33,16 +33,45 @@ const NewChatModal = ({ onClose }) => {
   const [error,    setError]    = useState('')
 
   const inputRef = useRef(null)
+  const chatCreatedRef = useRef(false) // Track if chat was already created
 
   /* auto-focus */
   useEffect(() => { inputRef.current?.focus() }, [])
 
   /* close on Escape */
   useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    const handler = (e) => { if (e.key === 'Escape') handleClose() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onClose])
+  }, [])
+
+  /* Create default chat on unmount if no chat was created */
+  useEffect(() => {
+    return () => {
+      if (!chatCreatedRef.current) {
+        createDefaultChat()
+      }
+    }
+  }, [])
+
+  const createDefaultChat = async () => {
+    try {
+      const res = await axios.post(
+        'https://luna-8gpi.onrender.com/api/chat',
+        { title: 'New Chat' },
+        { withCredentials: true }
+      )
+
+      const chat = res.data?.chat || res.data
+      
+      if (chat) {
+        dispatch(upsertConversation(chat))
+        dispatch(setActiveConversation(chat))
+      }
+    } catch (err) {
+      console.error('Failed to create default chat:', err)
+    }
+  }
 
   const handleCreate = async () => {
     const trimmed = title.trim()
@@ -58,8 +87,6 @@ const NewChatModal = ({ onClose }) => {
         { title: trimmed },
         { withCredentials: true }
       )
-      // console.log(res);
-      
 
       const chat = res.data?.chat || res.data
 
@@ -68,6 +95,7 @@ const NewChatModal = ({ onClose }) => {
       if (chat) {
         dispatch(upsertConversation(chat))
         dispatch(setActiveConversation(chat))
+        chatCreatedRef.current = true // Mark that chat was created
       }
       onClose()
     } catch (err) {
@@ -77,12 +105,21 @@ const NewChatModal = ({ onClose }) => {
     }
   }
 
+  const handleClose = () => {
+    // If user entered a title but didn't click create, treat it as create
+    if (title.trim() && !chatCreatedRef.current) {
+      handleCreate()
+    } else {
+      onClose()
+    }
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleCreate()
   }
 
   return (
-    <div className="new-chat-backdrop" onClick={onClose}>
+    <div className="new-chat-backdrop" onClick={handleClose}>
       <div
         className="new-chat-modal"
         onClick={e => e.stopPropagation()}
@@ -93,7 +130,7 @@ const NewChatModal = ({ onClose }) => {
         {/* Header */}
         <div className="new-chat-modal__header">
           <span className="new-chat-modal__title">NEW CONVERSATION</span>
-          <button className="new-chat-modal__close" onClick={onClose} aria-label="Close">
+          <button className="new-chat-modal__close" onClick={handleClose} aria-label="Close">
             <CloseIcon />
           </button>
         </div>
@@ -135,7 +172,7 @@ const NewChatModal = ({ onClose }) => {
           <div className="new-chat-modal__actions">
             <button
               className="new-chat-modal__cancel-btn"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={loading}
             >
               Cancel

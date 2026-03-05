@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useRef } from 'react'
+import axios from 'axios'
 import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   selectConversations,
   selectActiveConversation,
@@ -77,6 +78,8 @@ const ChatSidebar = ({ mobileOpen }) => {
   const [search, setSearch] = useState('')
   const [showNewChat, setShowNewChat] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
+  
+  const hasShownInitialModal = useRef(false) // Track if we've shown the modal once
 
   /* ================= Fetch Chats ================= */
 
@@ -93,6 +96,13 @@ const ChatSidebar = ({ mobileOpen }) => {
   useEffect(() => {
     if (!user?._id || !hasFetched) return
 
+    // If no chats exist → show create modal (only once)
+    if (chats?.length === 0 && !activeChat && !hasShownInitialModal.current) {
+      setShowNewChat(true)
+      hasShownInitialModal.current = true
+      return
+    }
+
     // If chats exist → open latest
     if (chats?.length > 0 && !activeChat) {
       const sortedChats = [...chats].sort(
@@ -100,12 +110,6 @@ const ChatSidebar = ({ mobileOpen }) => {
       )
 
       dispatch(setActiveConversation(sortedChats[0]))
-      return
-    }
-
-    // If no chats exist → show create modal
-    if (chats?.length === 0 && !activeChat) {
-      setShowNewChat(true)
     }
 
   }, [chats, activeChat, hasFetched, dispatch, user?._id])
@@ -128,9 +132,15 @@ const ChatSidebar = ({ mobileOpen }) => {
 
   /* ================= Logout ================= */
 
-  const handleLogout = () => {
-    dispatch(logout())
-    dispatch(resetChatState())
+  const handleLogout = async () => {
+    try {
+      await axios.post('https://luna-8gpi.onrender.com/api/auth/logout', {}, { withCredentials: true })
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      dispatch(logout())
+      dispatch(resetChatState())
+    }
   }
 
   /* ================= Safety ================= */
