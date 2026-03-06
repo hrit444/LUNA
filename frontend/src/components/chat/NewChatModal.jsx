@@ -25,7 +25,8 @@ const ChatBubbleIcon = () => (
 )
 
 /* ── Modal ── */
-const NewChatModal = ({ onClose }) => {
+/* ── Modal ── */
+const NewChatModal = ({ onClose, hasExistingChats }) => {
   const dispatch = useDispatch()
 
   const [title,    setTitle]    = useState('')
@@ -45,14 +46,14 @@ const NewChatModal = ({ onClose }) => {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  /* Create default chat on unmount if no chat was created */
+  /* Create default chat on unmount ONLY if no existing chats */
   useEffect(() => {
     return () => {
-      if (!chatCreatedRef.current) {
+      if (!chatCreatedRef.current && !hasExistingChats) {
         createDefaultChat()
       }
     }
-  }, [])
+  }, [hasExistingChats])
 
   const createDefaultChat = async () => {
     try {
@@ -106,10 +107,11 @@ const NewChatModal = ({ onClose }) => {
   }
 
   const handleClose = () => {
-    // If user entered a title but didn't click create, treat it as create
-    if (title.trim() && !chatCreatedRef.current) {
+    // If no existing chats and user entered a title, create the chat
+    if (!hasExistingChats && title.trim() && !chatCreatedRef.current) {
       handleCreate()
     } else {
+      // Just close - cleanup effect will handle default chat if needed
       onClose()
     }
   }
